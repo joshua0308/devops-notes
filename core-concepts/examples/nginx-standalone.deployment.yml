@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-standalone
+  labels:
+    app: nginx-standalone
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-standalone
+  template:
+    metadata:
+      labels:
+        app: nginx-standalone
+    spec:
+      containers:
+        - name: nginx-standalone
+          image: nginx:alpine
+          ports:
+          - containerPort: 80
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
