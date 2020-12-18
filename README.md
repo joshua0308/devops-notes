@@ -1,3 +1,1 @@
-## Devops-notes
-
-[Kubernetes](kubernetes/README.md)
+## [Kubernetes](kubernetes/README.md)
