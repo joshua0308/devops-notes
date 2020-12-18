@@ -1,15 +1,52 @@
-## [Kubernetes](../README.md)
 
+## [Kubernetes](../README.md)
+# Kubernetes for Developers: Core Concepts
+Source: https://app.pluralsight.com/library/courses/kubernetes-developers-core-concepts/table-of-contents
+
+- [Kubernetes for Developers: Core Concepts](#kubernetes-for-developers-core-concepts)
+  - [Kubernetes from a developer's perspective](#kubernetes-from-a-developers-perspective)
+    - [Kubernetes overview](#kubernetes-overview)
+    - [The big picture](#the-big-picture)
+    - [Benefits and use cases](#benefits-and-use-cases)
+  - [Creating Pods](#creating-pods)
+    - [Pod core concepts](#pod-core-concepts)
+    - [Creating pods](#creating-pods-1)
+    - [YAML fundamentals](#yaml-fundamentals)
+    - [Defining a pod with YAML](#defining-a-pod-with-yaml)
+    - [Pod health](#pod-health)
+  - [Creating Deployments](#creating-deployments)
+    - [Deployments Core Concepts](#deployments-core-concepts)
+    - [Creating a Deployment](#creating-a-deployment)
+    - [kubectl and Deployments](#kubectl-and-deployments)
+    - [Deployment options](#deployment-options)
+  - [Creating Services](#creating-services)
+    - [Services Core Concepts](#services-core-concepts)
+    - [Service Types](#service-types)
+    - [Creating a Service with kubectl](#creating-a-service-with-kubectl)
+    - [Creating a Service with YAML](#creating-a-service-with-yaml)
+    - [kubectl and Services](#kubectl-and-services)
+  - [Understanding Storage Options](#understanding-storage-options)
+    - [Storage Core Concepts](#storage-core-concepts)
+    - [PersistentVolume](#persistentvolume)
+    - [StorageClasses](#storageclasses)
+  - [Creating ConfigMaps and Secrets](#creating-configmaps-and-secrets)
+    - [ConfigMap Core Concepts](#configmap-core-concepts)
+    - [Creating a ConfigMap](#creating-a-configmap)
+    - [Using a ConfigMap](#using-a-configmap)
+    - [Secrets Core Concepts](#secrets-core-concepts)
+  - [Putting it all together](#putting-it-all-together)
+    - [Troubleshooting Techniques](#troubleshooting-techniques)
 ## Kubernetes from a developer's perspective
 
 ### Kubernetes overview
 
-Why Kubernetes? Because managing containers by hand is difficult
+Why Kubernetes?
+- Because managing containers by hand is difficult
 - What happens when some containers go down?
 - How do you manage different kinds of containers and make sure they are all connected? (server, API, storage, etc)
 - How do you update containers while ensuring uptime?
 
-Wouldn't it be nice if can:
+**Wouldn't it be nice if can:**
 - Not worry about the management of containers
 - Eliminate single points of failure
 - Scale containers easily
@@ -18,7 +55,7 @@ Wouldn't it be nice if can:
 
 > Kubernetes is a conductor of a container orchestra
 
-Key Kubernetes features
+**Key Kubernetes features**
 - Service discovery / load balancing
 - Storage orchestration
 - Automate rollouts / rollbacks
@@ -32,26 +69,26 @@ Kubernetes is a container and cluster management that provides a declarative way
 
 ![image](images/desired-state.png)
 
-Master and worker nodes
+**Master and worker nodes**
 - `master node` is the boss of the operation that knows how to manage the different employees, which we call `worker nodes`
 - `master node` and `worker nodes` form a `cluster`
 - `master node` will start `pods` inside the `worker nodes`
 
 ![image](images/big-picture.png)
 
-Pods and Containers
+**Pods and Containers**
 - `pods` could be seen as packaging for the `containers`
 - `nodes` can run one or more `pods`
 
 ![image](images/pods-and-nodes.png)
 
-Kubernetes building blocks
+**Kubernetes building blocks**
 - while you can have many pods running on different nodes on your cluster, you're going to need a way to deploy the pods (`deployment/ReplicaSet`)
 - you also need a way to enable the pods to communicate with each other or to external APIs (`service`)
 
 ![image](images/kubernetes-building-blocks.png)
 
-Master node and kubectl
+**Master node and kubectl**
 - `etcd (store)`: a database for the `master node` to track things that happen in the `cluster`
 - `controller manager`: responsible for when a request comes in, the manager can act upon that request and schedule it using a `scheduler`
 - `scheduler`: determines when the nodes and the different pods come to life or go away, etc.
@@ -59,7 +96,7 @@ Master node and kubectl
 
 ![image](images/communicating-with-kubectl.png)
 
-Worker node
+**Worker node**
 - `kubelet`: an agent that registers the `worker node` with the `cluster` and reports back and forth to the manager (lives inside the `worker node`)
 - `container runtime`: runtime to run containers within the pods
 - `kube-proxy`: ensures each pod gets a unique IP address and ties into the `services`
@@ -68,20 +105,20 @@ Worker node
 
 ### Benefits and use cases
 
-Key container benefits
+**Key container benefits**
 - Accelerate developer onboarding
 - Can get an entire environment up and running
 - Eliminate app conflicts
 - Environment consistency
 - Ship software faster
 
-Key kubernetes benefits
+**Key kubernetes benefits**
 - orchestrate containers
 - zero-downtime deployments
 - self healing capability
 - scale containers
 
-Developer use cases for kubernetes
+**Developer use cases for kubernetes**
 - Emulate production locally
 - Move from `docker-compose` to kubernetes
 - Create an end-to-end testing environment
@@ -92,7 +129,7 @@ Developer use cases for kubernetes
 - Learn how to leverage deployment options
 - Help devops create resources and solve problems
 
-Installing and running kubernetes locally
+**Installing and running kubernetes locally**
 - minikube
 - docker desktop
 
@@ -108,7 +145,7 @@ k get services
 ## Creating Pods
 
 ### Pod core concepts
-Pods
+**Pods**
 - Smallest object of the kubernetes object model
 - Environment for containers
 - A way to organize application “parts” into pods (server, caching, APIs, database, etc)
@@ -117,7 +154,7 @@ Pods
 - Pods live and die but never come back to life
 - Master node schedules pods on a worker node
 
-Pods, IPs, and Ports
+**Pods, IPs, and Ports**
 - Pods within a node have a unique IP address (by default it will be a cluster IP address)
 - Pod containers:
   - Share the same network namespace (share IP)
@@ -141,7 +178,7 @@ k get pods
 k get all
 ```
 
-Expose a pod port
+**Expose a pod port**
 - Pods and containers are only accessible within the kubernetes cluster by default
 - One way to expose a container port externally is to use port forwarding
 
@@ -159,7 +196,7 @@ k delete deployment [deployment-name]
 ```
 
 ### YAML fundamentals
-YAML files are composed of maps and lists
+**YAML files are composed of maps and lists**
 - Indentation matters (be consistent!)
 - Always use spaces instead of tabs
 - Data types:
@@ -170,7 +207,7 @@ YAML files are composed of maps and lists
 
 ### Defining a pod with YAML
 
-file.pod.yml
+**file.pod.yml**
 ```yaml
 apiVersion: v1
 kind: Pod # type of kubernetes resource
@@ -227,7 +264,7 @@ k delete -f nginx.pod.yml
 ### Pod health
 Kubernetes relies on probes to determine the health of a pod container. A probe is a diagnostic performed periodically by the kubelet on a container.
 
-Types of probes:
+**Types of probes**
 - Liveness probe
   - Determines if a pod is healthy and running as expected
   - When should a container restart?
@@ -236,17 +273,17 @@ Types of probes:
   - When should a container start receiving traffic?
 - Failed pod containers are recreated by default (restartPolicy defaults to always)
 
-Probe Actions:
+**Probe Actions**
 - ExecAction - executes an action inside the container
 - TCPSocketAction - TCP check against the container’s IP address on a specified port
 - HTTPGetAction - HTTP GET request against container
 
-Probes can have the following results:
+**Probes can have the following results**
 - Success
 - Failure
 - Unknown
 
-Liveness probe
+**Liveness probe**
 ```yaml
 spec:
   containers:
@@ -262,7 +299,7 @@ spec:
       failureThreshold: 1 # allow 1 failure before failing the pod
 ```
 
-Readiness probe
+**Readiness probe**
 ```yaml
 spec:
   containers:
@@ -280,17 +317,17 @@ spec:
 ### Deployments Core Concepts
 A `ReplicaSet` is a declarative way to manage pods. A `Deployment` is a declarative way to manage pods using a `ReplicaSet`.
 
-Pods, Deployments, and ReplicaSets
+**Pods, Deployments, and ReplicaSets**
 - Deployments and ReplicaSets ensure Pods stay running and can be used to scale Pods
 
-The Role of `ReplicaSets`
+**The Role of `ReplicaSets`**
 - ReplicaSets act as a Pod controller:
   - ensures the requested number of pods are available through a self-healing mechanism (it creates a new pod if an existing pod goes down)
   - can be used to scale pods horizontally
   - relies on a pod template
     - no need to create pods directly!
 
-The Role of `Deployments`
+**The Role of `Deployments`**
 - A Deployment manages ReplicaSets which in turn manage pods:
   - scales ReplicaSets, which scale pods
   - supports zero-downtime updates by creating and destroying ReplicaSets
@@ -363,7 +400,7 @@ We cannot rely on IP addresses of pods because they live and die. That's why we 
 
 Pods are "mortal" and may only live a short time (ephemeral). You can't rely on a pod IP address staying the same. Pods can also horizontally scale. A pod gets an IP address after it has been scheduled (no way for clients to know the IP address ahead of time).
 
-The Role of Services
+**The Role of Services**
 - services abstract pod IP addresses from consumers
 - load balances between pods
 - labels associate a service with a pod
@@ -376,7 +413,7 @@ The Role of Services
 
 ### Service Types
 
-ClusterIP Service
+**ClusterIP Service**
 - Internal to cluster (default)
 - Only pods within the cluster can talk to the service
 - Purpose of ClusterIP is to give each pod an IP address
@@ -384,20 +421,20 @@ ClusterIP Service
 
 ![image](./images/clusterip-service.png)
 
-NodePort Service
+**NodePort Service**
 - Exposes the service on each Node's IP at a static port
 - allocates a port from a range (default is 30000-32767)
 - each Node proxies the allocated port
 
 ![image](./images/nodeport-service.png)
 
-LoadBalancer Service
+**LoadBalancer Service**
 - Exposes a service externally
 - Useful when combined with a cloud provider's load balancer
 - NodePort and ClusterIP services are created
 - Each node proxies the allocated port
 
-ExternalName Service
+**ExternalName Service**
 - Service that acts as an alias for an external service
 - External service details are hidden from cluster
 
@@ -418,7 +455,7 @@ metadata:
   name: frontend # name of service (each service gets a DNS entry, which can be used in place of the actual IP address)
 ```
 
-ClusterIP Service
+**ClusterIP Service**
 ```yaml
 apiVersion: v1
 kind: Service
@@ -433,7 +470,7 @@ spec:
     targetPort: 80
 ```
 
-NodePort Service
+**NodePort Service**
 ```yaml
 apiVersion: v1
 kind: Service
@@ -447,7 +484,7 @@ spec:
     nodePort: 31000
 ```
 
-LoadBalancer Service
+**LoadBalancer Service**
 ```yaml
 apiVersion: v1
 kind: Service
@@ -460,7 +497,7 @@ spec:
     targetPort: 80
 ```
 
-ExternalName Service
+**ExternalName Service**
 ```yaml
 apiVersion: v1
 kind: Service
@@ -503,19 +540,18 @@ k exec [pod-name] -it sh
 Q: How do you store application state/data and exchange it between pods with kubernetes?
 A: Volumes (although other data storage options exist such as database)
 
-A volume can be used to hold data and state for pods and containers.
+**A volume can be used to hold data and state for pods and containers**
 - pods live and die so their file system is short lived
 - volumes can be used to store state/data and use it in a pod
 - a pod can have multiple volumes attached to it
 - containers rely on a mountPath to access a volume
 
-A volume references a storage location
-- a volume references a storage location
+**A volume references a storage location**
 - it must have a unique name
 - it is attached to a pod and may or may not be tied to the pod's lifetime
 - a volume mount references a volume by name and defines a mountPath
 
-Volume Types
+**Volume Types**
 - emptyDir
   - for storing "transient" data useful for sharing files between containers running in a pod (tied to the lifetime of the pod)
 - hostPath
@@ -530,7 +566,7 @@ Volume Types
 - cloud
   - cluster-wide storage
 
-PersistentVolume
+### PersistentVolume
 - a cluster-wide storage resource that relies on network-attached storage (NAS)
 - available to a pod even if the pod gets rescheduled to a different node
 - relies on a storage provider such as NFS, cloud storage or other options
@@ -540,13 +576,14 @@ PersistentVolume
 1. Create a PersistentVolume
 2. Create a PersistentVolumeClaim
 
-[Kubernetes examples](https://github.com/kubernetes/examples)
+[PersistentVolume & PersistentVolumeClaim examples](https://github.com/kubernetes/examples)
 
-StorageClasses
+### StorageClasses
 - used to define different "classes" of storage, acting as a type of storage template
 - supports dynamic provisioning of PersistentVolumes
 
 ![image](./images/storageclass-workflow.png)
+
 1. A pod's volume references PersistentVolumeClaim
 2. PersistentVolumeClaim references StorageClass
 3. Kubernetes uses StorageClass provisioner to dynamically provision a PersistentVolume
@@ -559,21 +596,21 @@ Any properties from StorageClass template will be available to PersistentVolume 
 
 ### ConfigMap Core Concepts
 
-ConfigMap
+**ConfigMap**
 - provides a way to inject configuration data into a container
 - can store entire files or provide key/value pairs:
   - store in a file
   - provide from command line
   - ConfigMap manifest
 
-Accessing ConfigMap Data in a Pod
+**Accessing ConfigMap Data in a Pod**
 - ConfigMaps can be accessed from a pod using:
   - environment variables (key/value)
   - ConfigMap Volume (access as files)
 
 ### Creating a ConfigMap
 
-Defining values in a ConfigMap manifest
+**Defining values in a ConfigMap manifest**
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -588,7 +625,7 @@ data:
   enemies.cheat.level=noGoodRotten
 ```
 
-Ways to create a ConfigMap
+**Ways to create a ConfigMap**
 ```sh
 # Create a ConfigMap using data from a file
 k create configmap [configmap-name] --from-file=[path-to-file]
@@ -613,19 +650,19 @@ k get configmap [configmap-name] -o yaml
 k get cm [configmap-name] -o yaml
 ```
 
-Environment Variables
+**Environment Variables**
 - envFrom can be used to load all ConfigMap keys/values into environment variables
 
 ![image](./images/configmap-env-vars.png)
 
-Volume
+**Volume**
 - ConfigMap values can be loaded through a volume
 - Each key is converted to a file - value is added into the file
 
 ![image](./images/configmap-volume.png)
 
 ### Secrets Core Concepts
-Secret
+**Secret**
 - an object that contains a small amount of sensitive data such as passwords, tokens, keys, etc
 - k8s can store sensitive information
 - avoids storing secrets in container images, files or deployment manifests
@@ -633,14 +670,14 @@ Secret
 - k8s only makes secrets available to nodes that have a pod requesting the secret
 - secrets are stored in tmpfs on a node (not on disk)
 
-Secrets Best Practices
+**Secrets Best Practices**
 - enable encryption at rest for cluster data
 - limit access to etcd (where secrets are stored) to only admin users
 - use SSL/TLS for etcd peer-to-peer communication
 - manifest (YAML/JSON) files only base64 encode the secrets
 - pods can access secrets so secure which users can create pods. Role-based access control (RBAC) can be used.
 
-Creating a secret
+**Creating a secret**
 ```sh
 # Create a secret and store securely in k8s
 k create secret generic [secret-name] --from-literal=pwd=my-password
@@ -661,10 +698,12 @@ k get secrets
 k get secrets [secret-name] -o yaml
 ```
 
-Accessing a secret: environment variables
+**Accessing a secret: environment variables**
+
 ![image](./images/secrets-env-vars.png)
 
-Accessing a secret: volumes
+**Accessing a secret: volumes**
+
 ![image](./images/secrets-volume.png)
  
 ## Putting it all together
