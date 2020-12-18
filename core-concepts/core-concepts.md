@@ -1,8 +1,282 @@
-## Creating Deployments
+## Kubernetes from a developer's perspective
 
+### Kubernetes overview
+
+Why Kubernetes? Because managing containers by hand is difficult
+- What happens when some containers go down?
+- How do you manage different kinds of containers and make sure they are all connected? (server, API, storage, etc)
+- How do you update containers while ensuring uptime?
+
+Wouldn't it be nice if can:
+- Not worry about the management of containers
+- Eliminate single points of failure
+- Scale containers easily
+- Update containers without bringing down the application (zero downtime deployment)
+- Have robust networking and persistent storage options
+
+> Kubernetes is a conductor of a container orchestra
+
+Key Kubernetes features
+- Service discovery / load balancing
+- Storage orchestration
+- Automate rollouts / rollbacks
+- Self-healing 
+- Secret and configuration management
+- Horizontal scaling
+
+### The big picture
+
+Kubernetes is a container and cluster management that provides a declarative way to define a cluster's state (if you define a desired state, kubernetes will get you there).
+
+![image](images/desired-state.png)
+
+Master and worker nodes
+- `master node` is the boss of the operation that knows how to manage the different employees, which we call `worker nodes`
+- `master node` and `worker nodes` form a `cluster`
+- `master node` will start `pods` inside the `worker nodes`
+
+![image](images/big-picture.png)
+
+Pods and Containers
+- `pods` could be seen as packaging for the `containers`
+- `nodes` can run one or more `pods`
+
+![image](images/pods-and-nodes.png)
+
+Kubernetes building blocks
+- while you can have many pods running on different nodes on your cluster, you're going to need a way to deploy the pods (`deployment/ReplicaSet`)
+- you also need a way to enable the pods to communicate with each other or to external APIs (`service`)
+
+![image](images/kubernetes-building-blocks.png)
+
+Master node and kubectl
+- `etcd (store)`: a database for the `master node` to track things that happen in the `cluster`
+- `controller manager`: responsible for when a request comes in, the manager can act upon that request and schedule it using a `scheduler`
+- `scheduler`: determines when the nodes and the different pods come to life or go away, etc.
+- `kubectl`: command line tool that we can use to send different requests into the `master node`, and those requests can then be scheduled to run on our different `worker nodes` within the `cluster`
+
+![image](images/communicating-with-kubectl.png)
+
+Worker node
+- `kubelet`: an agent that registers the `worker node` with the `cluster` and reports back and forth to the manager (lives inside the `worker node`)
+- `container runtime`: runtime to run containers within the pods
+- `kube-proxy`: ensures each pod gets a unique IP address and ties into the `services`
+
+![image](images/kubernetes-nodes.png)
+
+### Benefits and use cases
+
+Key container benefits
+- Accelerate developer onboarding
+- Can get an entire environment up and running
+- Eliminate app conflicts
+- Environment consistency
+- Ship software faster
+
+Key kubernetes benefits
+- orchestrate containers
+- zero-downtime deployments
+- self healing capability
+- scale containers
+
+Developer use cases for kubernetes
+- Emulate production locally
+- Move from `docker-compose` to kubernetes
+- Create an end-to-end testing environment
+- Ensure application scales properly
+- Ensure secrets/configs are working properly
+- Performance testing scenarios
+- Workload scenarios (CI/CD and more)
+- Learn how to leverage deployment options
+- Help devops create resources and solve problems
+
+Installing and running kubernetes locally
+- minikube
+- docker desktop
+
+```sh
+# common kubectl commands
+k version
+k cluster-info
+k get all
+k get pods
+k get services
+```
+
+## Creating Pods
+
+### Pod core concepts
+Pods
+- Smallest object of the kubernetes object model
+- Environment for containers
+- A way to organize application “parts” into pods (server, caching, APIs, database, etc)
+- A pod has an IP address, memory, volumes, etc shared across containers
+- We can scale pods horizontally as replicas, which can be load-balanced by kubernetes
+- Pods live and die but never come back to life
+- Master node schedules pods on a worker node
+
+Pods, IPs, and Ports
+- Pods within a node have a unique IP address (by default it will be a cluster IP address)
+- Pod containers:
+  - Share the same network namespace (share IP)
+  - Have same localhost
+  - Ports need to be unique if you have multiple containers in a single pod
+  - Ports can be reused by containers in separate pods
+- Pods never span nodes (it cannot exist in two different nodes)
+
+![image](images/pods-ips-ports.png)
+
+### Creating pods
+
+```sh
+# run the nginx:alpine container in a pod
+k run [pod-name] --image=nginx:alpine
+
+# list pods
+k get pods
+
+# list all resources
+k get all
+```
+
+Expose a pod port
+- Pods and containers are only accessible within the kubernetes cluster by default
+- One way to expose a container port externally is to use port forwarding
+
+```sh
+# enable pod container to be called externally (host port : internal port)
+k port-forward [pod-name] 8080:80
+
+# delete pod
+k delete pod [pod-name]
+
+# A deployment is responsible for the current state to be maintained. That is why if you use the delete command, it will spawn up a new pod right away.
+
+# delete deployment
+k delete deployment [deployment-name]
+```
+
+### YAML fundamentals
+YAML files are composed of maps and lists
+- Indentation matters (be consistent!)
+- Always use spaces instead of tabs
+- Data types:
+  - Maps
+  - Key value pairs
+  - Lists
+  - Sequence of items
+
+### Defining a pod with YAML
+
+file.pod.yml
+```yaml
+apiVersion: v1
+kind: Pod # type of kubernetes resource
+metadata: # metadata about the pod
+  name: my-nginx
+  labels: # used to link with other resources (services, deployments)
+    app: nginx
+    rel: stable
+spec: # blueprint for the pod
+  containers: # info about the container that will run in the pod
+  - name: my-nginx
+    image: nginx:alpine
+    ports:
+    - containerPort: 80
+    resources: # add resource constraints to the containers
+      limits:
+        memory: "128Mi" # 128 MB
+        cpu: "200m" # 200 millicpu (0.2 cpu)
+```
+
+```sh
+# to create a pod using YAML, use the kubectl create command along with --filename
+k create -f file.pod.yml
+
+# perform a dry run
+k create -f file.pod.yml --dry-run --validate=true
+
+# to create or apply changes to a pod using YAML, use the kubectl apply command along with --filename
+# use this over `create`
+k apply -f file.pod.yml
+
+# use --save-config when you want to use `apply` in the future. It stores current properties in resource’s annotations.
+k create -f file.pod.yml --save-config
+
+# delete pod using YAML file that created it
+k delete -f file.pod.yml
+
+# get output of a pod (you can see that there are annotations if you created your pod with --save-config)
+k get pod my-nginx -o yaml
+
+# describe pod (the events at the very end is useful for debugging)
+k describe pod my-nginx
+
+# interactive mode
+k exec my-nginx -it sh
+
+# edit pod
+k edit -f nginx.pod.yml
+
+# delete pod (this will actually delete the pod since we do not have a deployment)
+k delete -f nginx.pod.yml
+```
+
+### Pod health
+Kubernetes relies on probes to determine the health of a pod container. A probe is a diagnostic performed periodically by the kubelet on a container.
+
+Types of probes:
+- Liveness probe
+  - Determines if a pod is healthy and running as expected
+  - When should a container restart?
+- Readiness probe
+  - Determines if a pod should receive requests
+  - When should a container start receiving traffic?
+- Failed pod containers are recreated by default (restartPolicy defaults to always)
+
+Probe Actions:
+- ExecAction - executes an action inside the container
+- TCPSocketAction - TCP check against the container’s IP address on a specified port
+- HTTPGetAction - HTTP GET request against container
+
+Probes can have the following results:
+- Success
+- Failure
+- Unknown
+
+Liveness probe
+```yaml
+spec:
+  containers:
+  - name: my-nginx
+    image: nginx:alpine
+    livenessProbe: # define liveness probe
+      httpGet: # check liveness by sending HTTP requests
+        path: /index.html # check /index.html on port 80
+        port: 80
+      initialDelaySeconds: 15 # wait 15 seconds before sending the first request
+      timeoutSeconds: 2 # timeout after 2 seconds
+      periodSeconds: 5 # check every 5 seconds
+      failureThreshold: 1 # allow 1 failure before failing the pod
+```
+
+Readiness probe
+```yaml
+spec:
+  containers:
+  - name: my-nginx
+    image: nginx:alpine
+    readinessProbe: # define readiness probe
+      httpGet:
+        path: /index.html # check /index.html on port 80
+        port: 80
+      initialDelaySeconds: 2 # wait 2 seconds
+      periodSeconds: 5 # check every 5 seconds
+```
+
+## Creating Deployments
 ### Deployments Core Concepts
-A ReplicaSet is a declarative way to manage pods
-A Deployment is a declarative way to manage pods using a ReplicaSet
+A `ReplicaSet` is a declarative way to manage pods. A `Deployment` is a declarative way to manage pods using a `ReplicaSet`.
 
 Pods, Deployments, and ReplicaSets
 - Deployments and ReplicaSets ensure Pods stay running and can be used to scale Pods
@@ -24,11 +298,29 @@ The Role of `Deployments`
 
 ### Creating a Deployment
 
-Deployment is a higher level wrapper around ReplicaSet
+`Deployment` is a higher level wrapper around `ReplicaSet`.
 
-![image](./images/image-1.png)
-
-A selector is used to "select" the template to use based on labels.
+```yaml
+apiVersion: apps/v1
+kind: Deployment # resource type
+metadata: # metadata about the deployment
+  name: frontend
+  labels: # labels can be used with selectors to tie resources together
+    app: my-nginx
+    tier: frontend
+spec: # define the deployment spec
+  selector: # selector will be used to select the template to create the pods
+    matchLabels:
+      tier: frontend # here we are selecting the template with the label frontend (this will select the pod template below)
+  template: # pod template
+    metadata:
+      labels:
+        tier: frontend
+    spec: # define the pod spec
+      containers: # container that will run in the pod
+      - name: my-nginx
+        image: nginx:alpine
+```
 
 ### kubectl and Deployments
 ```sh
@@ -50,8 +342,6 @@ k delete deployment [deployment-name]
 # Scale the Deployment pods
 k scale deployment [deployment-name] --replicas=5
 ```
-
-`resources` allows you to constrain what a given container is allowed to run in terms of memory and CPU, etc.
 
 ### Deployment options
 Zero downtime deployments allow software updates to be deployed to production without impacting end users
@@ -80,7 +370,7 @@ The Role of Services
 - Services are not ephemeral
 - Creates endpoints which sit between a service and a pod
 
-![image](./images/image-2.png)
+![image](./images/services.png)
 
 ### Service Types
 
