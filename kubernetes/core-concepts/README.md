@@ -1,7 +1,7 @@
 
 ## [Kubernetes](../README.md)
 # Kubernetes for Developers: Core Concepts
-Source: https://app.pluralsight.com/library/courses/kubernetes-developers-core-concepts/table-of-contents
+[Course by Dan Wahlin (Pluralsight)](https://app.pluralsight.com/library/courses/kubernetes-developers-core-concepts/table-of-contents)
 
 - [Kubernetes for Developers: Core Concepts](#kubernetes-for-developers-core-concepts)
   - [Kubernetes from a developer's perspective](#kubernetes-from-a-developers-perspective)
